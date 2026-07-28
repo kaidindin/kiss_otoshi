@@ -1,9 +1,9 @@
 // バージョンを上げるとキャッシュが更新されます（更新時は必ず数字を変える）
-const CACHE = "kiss-otoshi-v1";
+const CACHE = "kiss-otoshi-v6";
 const ASSETS = [
   "./","./index.html","./manifest.json",
   "./kiss1.png","./kiss2.png","./kiss3.png","./kiss4.png","./kiss5.png",
-  "./kiss6.png","./kiss7.png","./kiss8.png","./kiss9.png",
+  "./kiss6.png","./kiss7.png","./kiss8.png","./kiss9.png","./kiss10.png",
   "./icon-192.png","./icon-512.png","./apple-touch-icon.png"
 ];
 
