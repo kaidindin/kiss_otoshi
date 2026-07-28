@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>KISS落とし♡｜メンズミントKISS 恋の合体パズル</title>
+<meta name="description" content="メンズミントのKISSと恋を重ねる落ちものパズル♡ 合体させて9段階のときめきを集めよう。カイディンディン制作。">
+
+<!-- OGP / SNS -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="KISS落とし♡｜恋の合体パズル">
+<meta property="og:description" content="KISSを合体させてときめきMAXへ♡ 9段階の恋を育てる落ちものパズル。">
+<meta property="og:image" content="https://kaidindin.github.io/kiss_otoshi/og.png">
+<meta property="og:url" content="https://kaidindin.github.io/kiss_otoshi/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="KISS落とし♡">
+<meta name="twitter:description" content="KISSを合体させてときめきMAXへ♡">
+<meta name="twitter:image" content="https://kaidindin.github.io/kiss_otoshi/og.png">
+
+<!-- PWA / Apple -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#FFE3EC">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="KISS落とし">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+
+<!-- Google Search Console -->
+<meta name="google-site-verification" content="tl6zSfZbgY7SJdKggf4uat4GSaNCkeOe48HiajlPHsE">
+
+<!-- JSON-LD -->
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"VideoGame",
+  "name":"KISS落とし",
+  "description":"メンズミントのKISSと恋を重ねる落ちものパズル。",
+  "genre":"Puzzle",
+  "url":"https://kaidindin.github.io/kiss_otoshi/",
+  "image":"https://kaidindin.github.io/kiss_otoshi/og.png",
+  "author":{"@type":"Person","name":"カイディンディン"},
+  "operatingSystem":"Web","applicationCategory":"Game"
+}
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;800&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+
+<style>
+:root{
+  --bg:#FFF0F5; --bg2:#FFE3EC; --rose:#FF6FA5; --rose-deep:#C64B7E;
+  --plum:#7A2E4A; --gold:#E9B44C; --cream:#FFFBFD; --ink:#7a3a53;
+  --line:#FF6FA5;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overscroll-behavior:none;touch-action:none}
+body{
+  background:
+    radial-gradient(130% 80% at 50% -10%, #FFFFFF 0%, var(--bg2) 45%, var(--bg) 100%);
+  color:var(--plum);
+  font-family:"Zen Maru Gothic",system-ui,sans-serif;
+  display:flex;flex-direction:column;align-items:center;
+  min-height:100dvh;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  user-select:none;-webkit-user-select:none;position:relative;overflow-x:hidden;
+}
+/* 背景に浮かぶハート */
+.bg-hearts{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.bg-hearts span{position:absolute;bottom:-40px;color:var(--rose);opacity:.16;
+  animation:rise linear infinite;font-size:22px}
+@keyframes rise{
+  0%{transform:translateY(0) rotate(0);opacity:0}
+  10%{opacity:.18}
+  90%{opacity:.18}
+  100%{transform:translateY(-112vh) rotate(40deg);opacity:0}
+}
+.wrap{position:relative;z-index:1;width:100%;display:flex;flex-direction:column;align-items:center;flex:1}
+
+header{width:100%;max-width:440px;padding:12px 16px 2px;display:flex;align-items:flex-end;gap:10px}
+h1{font-family:"Shippori Mincho",serif;font-weight:800;font-size:27px;margin:0;letter-spacing:1px;
+   color:var(--rose-deep);text-shadow:0 1px 0 #fff}
+h1 .heart{color:var(--rose)}
+.sub{font-size:12px;color:var(--rose-deep);opacity:.8;margin-top:2px;font-weight:700}
+.byline{font-size:10.5px;color:var(--rose-deep);opacity:.7;margin-left:auto;text-align:right;line-height:1.35}
+
+.scorebar{width:100%;max-width:440px;padding:6px 16px 8px;display:flex;gap:10px}
+.stat{flex:1;background:var(--cream);border:1.5px solid #FFC9DC;
+  border-radius:18px;padding:6px 14px;box-shadow:0 6px 16px rgba(255,111,165,.15)}
+.stat .l{font-size:11px;color:var(--rose);font-weight:700;letter-spacing:1px}
+.stat .l::before{content:"♥ "}
+.stat .v{font-family:"Shippori Mincho",serif;font-weight:800;font-size:24px;line-height:1.15;color:var(--plum)}
+.stat.best .v{color:var(--gold)}
+
+.board-wrap{width:100%;max-width:440px;padding:0 12px;flex:1;display:flex;flex-direction:column;justify-content:flex-start}
+.board{position:relative;width:100%;aspect-ratio:400/600;margin:0 auto;
+  background:
+    radial-gradient(120% 60% at 50% 0%, #FFFFFF 0%, #FFEAF2 55%, #FFDCEA 100%);
+  border:3px solid var(--rose);border-radius:26px;overflow:hidden;
+  box-shadow:0 12px 34px rgba(198,75,126,.22), inset 0 0 40px rgba(255,111,165,.10)}
+.board canvas{position:absolute;inset:0;width:100%!important;height:100%!important}
+.deadline{position:absolute;left:0;right:0;top:15%;height:0;
+  border-top:2px dashed var(--line);opacity:.6;pointer-events:none;z-index:3}
+.deadline::after{content:"♥ LINE ♥";position:absolute;right:8px;top:-15px;font-size:10px;
+  color:var(--rose-deep);font-weight:700}
+#preview{position:absolute;top:2%;width:11%;transform:translateX(-50%);z-index:4;
+  pointer-events:none;filter:drop-shadow(0 4px 8px rgba(198,75,126,.35));transition:opacity .15s}
+#dropGuide{position:absolute;top:0;bottom:0;width:0;
+  border-left:2px dotted rgba(255,111,165,.55);transform:translateX(-1px);z-index:2;pointer-events:none}
+
+.next{width:100%;max-width:440px;display:flex;align-items:center;gap:10px;padding:12px 20px 2px}
+.next .lbl{font-size:12px;color:var(--rose-deep);font-weight:700}
+.next .lbl::before{content:"♡ "}
+.chain{display:flex;gap:2px;align-items:center;flex-wrap:wrap}
+.chain img{width:23px;height:23px;border-radius:50%;box-shadow:0 2px 5px rgba(198,75,126,.2)}
+.chain .arw{color:var(--rose);font-size:10px}
+
+.controls{width:100%;max-width:440px;display:flex;gap:10px;padding:10px 16px 16px}
+button{font-family:"Zen Maru Gothic",sans-serif;font-weight:700;border:none;border-radius:999px;
+  padding:13px;font-size:15px;cursor:pointer;color:#fff;
+  background:linear-gradient(180deg,#FF8FB8,#FF6FA5);box-shadow:0 6px 16px rgba(255,111,165,.35)}
+button.ghost{background:#fff;border:1.5px solid var(--rose);color:var(--rose-deep);box-shadow:0 4px 10px rgba(255,111,165,.15)}
+button:active{transform:translateY(1px)}
+.controls button{flex:1}
+
+.overlay{position:fixed;inset:0;background:rgba(122,46,74,.42);backdrop-filter:blur(5px);
+  display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+.overlay.show{display:flex}
+.card{width:100%;max-width:380px;background:var(--cream);border:2px solid var(--rose);
+  border-radius:26px;padding:14px;text-align:center;box-shadow:0 24px 60px rgba(122,46,74,.35);position:relative}
+.card::before{content:"";position:absolute;inset:7px;border:1.5px dashed #FFB6CF;border-radius:20px;pointer-events:none}
+.card>*{position:relative}
+.card .inner{padding:10px 8px}
+.card h2{font-family:"Shippori Mincho",serif;font-weight:800;margin:0 0 2px;font-size:23px;color:var(--rose-deep)}
+.card h2 .heart{color:var(--rose)}
+.card .lead{font-size:12px;color:var(--ink);opacity:.85}
+.card .big{font-family:"Shippori Mincho",serif;font-weight:800;font-size:48px;color:var(--gold);margin:4px 0;line-height:1}
+.card .big::after{content:" ♥";font-size:26px;color:var(--rose)}
+.card input{width:100%;padding:12px;border-radius:14px;border:1.5px solid #FFC9DC;
+  background:#fff;color:var(--plum);font-size:16px;text-align:center;margin:8px 0;font-family:inherit}
+.card .row{display:flex;gap:8px;margin-top:8px}
+.card .row button{flex:1}
+.rank{text-align:left;margin-top:14px;max-height:32vh;overflow:auto}
+.rank h3{font-size:13px;color:var(--rose-deep);margin:0 0 6px;font-weight:700}
+.rank h3::before{content:"♡ "}
+.rank ol{margin:0;padding-left:0;list-style:none;counter-reset:r}
+.rank li{counter-increment:r;display:flex;justify-content:space-between;align-items:center;
+  padding:6px 8px;border-bottom:1px dashed #FFD3E0;font-size:14px}
+.rank li::before{content:counter(r);width:22px;color:var(--gold);font-family:"Shippori Mincho",serif;font-weight:800}
+.rank li .nm{flex:1;padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--plum)}
+.rank li .sc{color:var(--rose-deep);font-weight:700}
+.note{font-size:11px;opacity:.6;margin-top:8px;color:var(--ink)}
+.pop{position:absolute;z-index:6;font-family:"Shippori Mincho",serif;font-weight:800;color:var(--rose-deep);
+  font-size:20px;pointer-events:none;animation:floatUp .8s ease-out forwards;text-shadow:0 2px 4px rgba(255,255,255,.7)}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,0) scale(.6)}
+  20%{opacity:1}100%{opacity:0;transform:translate(-50%,-46px) scale(1.1)}}
+</style>
+</head>
+<body>
+<div class="bg-hearts" id="bgHearts"></div>
+<div class="wrap">
+<header>
+  <div>
+    <h1>KISS落とし<span class="heart">♥</span></h1>
+    <div class="sub">ドキドキ♡合体パズル</div>
+  </div>
+  <div class="byline">メンズミント公認<br>制作：カイディンディン</div>
+</header>
+
+<div class="scorebar">
+  <div class="stat"><div class="l">SCORE</div><div class="v" id="score">0</div></div>
+  <div class="stat best"><div class="l">BEST</div><div class="v" id="best">0</div></div>
+</div>
+
+<div class="board-wrap">
+  <div class="board" id="board">
+    <div class="deadline" id="deadline"></div>
+    <div id="dropGuide"></div>
+    <img id="preview" src="kiss1.png" alt="">
+  </div>
+</div>
+
+<div class="next">
+  <span class="lbl">恋の進化</span>
+  <div class="chain" id="chain"></div>
+</div>
+
+<div class="controls">
+  <button class="ghost" id="btnRank">ランキング</button>
+  <button id="btnRestart">やりなおす</button>
+</div>
+</div>
+
+<!-- ゲームオーバー -->
+<div class="overlay" id="ovOver">
+  <div class="card"><div class="inner">
+    <h2>恋の終わり<span class="heart">…♥</span></h2>
+    <div class="lead">今日のときめき</div>
+    <div class="big" id="finalScore">0</div>
+    <input id="nameInput" maxlength="12" placeholder="なまえ（12文字まで）">
+    <div class="row">
+      <button id="btnSubmit">ランキング登録</button>
+      <button class="ghost" id="btnShare">Xで共有</button>
+    </div>
+    <div class="row"><button class="ghost" id="btnAgain">もう一度、恋する</button></div>
+    <div class="rank"><h3>ときめきランキング TOP10</h3><ol id="rankList"><li><span class="nm">読み込み中…</span></li></ol></div>
+    <div class="note" id="ovNote"></div>
+  </div></div>
+</div>
+
+<!-- ランキングのみ -->
+<div class="overlay" id="ovRank">
+  <div class="card"><div class="inner">
+    <h2 style="color:var(--gold)">ランキング<span class="heart">♥</span></h2>
+    <div class="rank"><h3>ときめき TOP10</h3><ol id="rankList2"><li><span class="nm">読み込み中…</span></li></ol></div>
+    <div class="row" style="margin-top:14px"><button id="btnCloseRank">とじる</button></div>
+  </div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ===== 設定 ===== */
+const SUPABASE_URL = "https://vdjirxautmudhucirieh.supabase.co";
+const SUPABASE_ANON_KEY = "★ここにanon keyを貼る★"; // ← Supabaseのanon keyに置き換え
+let supa = null;
+try{
+  if(SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.includes("★") && window.supabase){
+    supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+}catch(e){ console.warn("supabase init failed", e); }
+
+/* ===== ステージ定義（進化順） ===== */
+const IMG_N = 320;
+const STAGES = [
+  null,
+  {img:"kiss1.png", r:22,  score:1 },
+  {img:"kiss2.png", r:30,  score:3 },
+  {img:"kiss3.png", r:39,  score:6 },
+  {img:"kiss4.png", r:50,  score:10},
+  {img:"kiss5.png", r:63,  score:15},
+  {img:"kiss6.png", r:78,  score:21},
+  {img:"kiss7.png", r:95,  score:28},
+  {img:"kiss8.png", r:114, score:36},
+  {img:"kiss9.png", r:136, score:45},
+];
+const MAX_STAGE = 9;
+const DROP_POOL = [1,1,1,2,2,3,3,4,5];
+
+/* ===== Matter ===== */
+const {Engine, Render, Runner, World, Bodies, Body, Events, Composite} = Matter;
+const W = 400, H = 600, WALL = 60;
+const LINE_Y = H*0.15;
+
+const board = document.getElementById("board");
+const engine = Engine.create();
+engine.gravity.y = 1;
+const world = engine.world;
+
+const render = Render.create({
+  element: board, engine: engine,
+  options:{ width:W, height:H, wireframes:false, background:"transparent",
+            pixelRatio: Math.min(window.devicePixelRatio||1, 2) }
+});
+Render.run(render);
+const runner = Runner.create();
+Runner.run(runner, engine);
+
+const wallOpt = {isStatic:true, render:{visible:false}, friction:.4};
+World.add(world, [
+  Bodies.rectangle(-WALL/2, H/2, WALL, H*2, wallOpt),
+  Bodies.rectangle(W+WALL/2, H/2, WALL, H*2, wallOpt),
+  Bodies.rectangle(W/2, H+WALL/2, W*2, WALL, wallOpt),
+]);
+
+STAGES.forEach(s=>{ if(s){ const im=new Image(); im.src=s.img; }});
+
+/* ===== 状態 ===== */
+let score=0, best=Number(localStorage.getItem("ko_best")||0);
+let canDrop=true, gameOver=false;
+let nextStage = pickDrop();
+let previewFrac = 0.5;
+document.getElementById("best").textContent = best;
+
+function pickDrop(){ return DROP_POOL[Math.floor(Math.random()*DROP_POOL.length)]; }
+
+function makeKiss(stage, x, y){
+  const s = STAGES[stage];
+  const sc = (2*s.r)/IMG_N;
+  const b = Bodies.circle(x, y, s.r, {
+    restitution:.12, friction:.45, frictionStatic:.6, density:.0012,
+    render:{ sprite:{ texture:s.img, xScale:sc, yScale:sc } }
+  });
+  b.stage = stage; b.bornAt = performance.now(); b.overTime = 0;
+  return b;
+}
+
+/* ===== ドロップ ===== */
+function updatePreview(){
+  const s = STAGES[nextStage];
+  const pv = document.getElementById("preview");
+  pv.src = s.img;
+  pv.style.width = (2*s.r/W*100)+"%";
+  const minF = s.r/W, maxF = 1 - s.r/W;
+  previewFrac = Math.min(maxF, Math.max(minF, previewFrac));
+  pv.style.left = (previewFrac*100)+"%";
+  pv.style.opacity = canDrop && !gameOver ? "1":"0";
+  const g = document.getElementById("dropGuide");
+  g.style.left = (previewFrac*100)+"%";
+  g.style.opacity = canDrop && !gameOver ? "1":"0";
+}
+
+function doDrop(){
+  if(!canDrop || gameOver) return;
+  const s = STAGES[nextStage];
+  const minF = s.r/W, maxF = 1 - s.r/W;
+  const f = Math.min(maxF, Math.max(minF, previewFrac));
+  const x = f*W;
+  const b = makeKiss(nextStage, x, LINE_Y*0.55);
+  World.add(world, b);
+  playPop(300+nextStage*40, .06);
+  canDrop=false;
+  document.getElementById("preview").style.opacity="0";
+  document.getElementById("dropGuide").style.opacity="0";
+  nextStage = pickDrop();
+  setTimeout(()=>{ canDrop=true; updatePreview(); }, 480);
+}
+
+/* ===== ポインタ操作 ===== */
+function pointerX(e){
+  const rect = board.getBoundingClientRect();
+  const cx = (e.touches? e.touches[0].clientX : e.clientX);
+  return (cx - rect.left)/rect.width;
+}
+board.addEventListener("pointermove", e=>{ previewFrac = pointerX(e); updatePreview(); }, {passive:false});
+board.addEventListener("pointerdown", e=>{ unlockAudio(); previewFrac = pointerX(e); updatePreview(); }, {passive:false});
+board.addEventListener("pointerup",   e=>{ doDrop(); }, {passive:false});
+document.addEventListener("touchmove", e=>{ if(e.target.closest(".board")) e.preventDefault(); }, {passive:false});
+
+/* ===== 合体判定 ===== */
+Events.on(engine, "collisionStart", ev=>{
+  for(const pair of ev.pairs){
+    const a=pair.bodyA, b=pair.bodyB;
+    if(a.stage==null||b.stage==null) continue;
+    if(a.isMerging||b.isMerging) continue;
+    if(a.stage!==b.stage) continue;
+    const st=a.stage;
+    a.isMerging=b.isMerging=true;
+    const mx=(a.position.x+b.position.x)/2, my=(a.position.y+b.position.y)/2;
+    World.remove(world,a); World.remove(world,b);
+    if(st>=MAX_STAGE){
+      addScore(100); spawnPop(mx,my,"+100 ♥"); burst(mx,my); playVoice(9); playPop(880,.2);
+    }else{
+      const ns=st+1;
+      const nb=makeKiss(ns,mx,my); nb.isMerging=false;
+      World.add(world,nb); Body.setVelocity(nb,{x:0,y:-2});
+      addScore(STAGES[ns].score);
+      spawnPop(mx,my,"+"+STAGES[ns].score);
+      burst(mx,my); playVoice(ns); playPop(400+ns*60,.12);
+    }
+  }
+});
+
+function addScore(n){
+  score+=n;
+  document.getElementById("score").textContent=score;
+  if(score>best){ best=score; document.getElementById("best").textContent=best;
+    localStorage.setItem("ko_best",best); }
+}
+
+/* ===== ゲームオーバー判定 ===== */
+Events.on(engine,"afterUpdate", ()=>{
+  if(gameOver) return;
+  const dt = engine.timing.lastDelta || 16;
+  const bodies = Composite.allBodies(world);
+  for(const b of bodies){
+    if(b.stage==null || b.isStatic) continue;
+    const top = b.position.y - (STAGES[b.stage].r);
+    const speed = Math.hypot(b.velocity.x, b.velocity.y);
+    const age = performance.now()-b.bornAt;
+    if(top < LINE_Y && speed < 0.8 && age > 900){
+      b.overTime += dt;
+      if(b.overTime > 1400){ endGame(); return; }
+    }else{ b.overTime = 0; }
+  }
+});
+
+/* ===== エフェクト（ハート） ===== */
+function spawnPop(wx,wy,txt){
+  const el=document.createElement("div"); el.className="pop"; el.textContent=txt;
+  el.style.left=(wx/W*100)+"%"; el.style.top=(wy/H*100)+"%";
+  board.appendChild(el); setTimeout(()=>el.remove(),800);
+}
+function burst(wx,wy){
+  const cols=["#FF6FA5","#FF9EC4","#E9B44C","#FFFFFF"];
+  for(let i=0;i<7;i++){
+    const p=document.createElement("div");
+    p.textContent="♥";
+    p.style.cssText=`position:absolute;z-index:5;left:${wx/W*100}%;top:${wy/H*100}%;
+      pointer-events:none;color:${cols[i%cols.length]};font-size:${10+Math.random()*8}px;
+      text-shadow:0 1px 2px rgba(198,75,126,.3);`;
+    board.appendChild(p);
+    const ang=Math.random()*6.28, d=20+Math.random()*24;
+    p.animate([{transform:"translate(-50%,-50%) scale(.6)",opacity:1},
+      {transform:`translate(${Math.cos(ang)*d-50}%,${Math.sin(ang)*d-50}%) scale(1.1)`,opacity:0}],
+      {duration:600,easing:"ease-out"});
+    setTimeout(()=>p.remove(),620);
+  }
+}
+
+/* ===== サウンド ===== */
+let actx=null;
+function unlockAudio(){
+  if(!actx){ try{ actx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+  if(actx && actx.state==="suspended") actx.resume();
+}
+function playPop(freq, vol){
+  if(!actx) return;
+  const o=actx.createOscillator(), g=actx.createGain();
+  o.type="sine"; o.frequency.value=freq;
+  g.gain.value=vol||.08; o.connect(g); g.connect(actx.destination);
+  o.start(); g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime+0.18);
+  o.stop(actx.currentTime+0.19);
+}
+const voiceCache={};
+function playVoice(stage){
+  try{
+    let a=voiceCache[stage];
+    if(!a){ a=new Audio(`voice${stage}.mp3`); a.preload="auto"; voiceCache[stage]=a; }
+    a.currentTime=0; a.play().catch(()=>{});
+  }catch(e){}
+}
+
+/* ===== ランキング ===== */
+async function loadRank(targetId){
+  const ol=document.getElementById(targetId);
+  if(!supa){ ol.innerHTML=`<li><span class="nm">ローカルベスト</span><span class="sc">${best}</span></li>`; return; }
+  try{
+    const {data,error}=await supa.rpc("ko_top");
+    if(error) throw error;
+    if(!data||!data.length){ ol.innerHTML=`<li><span class="nm">まだ記録なし</span></li>`; return; }
+    ol.innerHTML=data.slice(0,10).map(r=>
+      `<li><span class="nm">${escapeHtml(r.name)}</span><span class="sc">${r.score}</span></li>`).join("");
+  }catch(e){ ol.innerHTML=`<li><span class="nm">読み込み失敗</span></li>`; console.warn(e); }
+}
+async function submitScore(){
+  const nm=(document.getElementById("nameInput").value||"ななし").trim().slice(0,12);
+  localStorage.setItem("ko_name",nm);
+  const note=document.getElementById("ovNote");
+  if(!supa){ note.textContent="※anon key未設定のためローカルのみ"; return; }
+  note.textContent="登録中…";
+  try{
+    const {error}=await supa.rpc("ko_submit",{p_name:nm,p_score:score});
+    if(error) throw error;
+    note.textContent="登録しました♥";
+    loadRank("rankList");
+  }catch(e){ note.textContent="登録に失敗しました"; console.warn(e); }
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+
+/* ===== X共有 ===== */
+function share(){
+  const text=`メンズミントのKISS落とし♡で ときめき${score}点 出た！\n#KISS落とし #メンズミント`;
+  const url="https://kaidindin.github.io/kiss_otoshi/";
+  if(navigator.share){ navigator.share({text,url}).catch(()=>{}); }
+  else{ window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,"_blank"); }
+}
+
+/* ===== ゲームオーバー ===== */
+function endGame(){
+  gameOver=true;
+  document.getElementById("finalScore").textContent=score;
+  document.getElementById("nameInput").value=localStorage.getItem("ko_name")||"";
+  document.getElementById("ovNote").textContent="";
+  document.getElementById("ovOver").classList.add("show");
+  loadRank("rankList");
+}
+function restart(){
+  Composite.allBodies(world).forEach(b=>{ if(b.stage!=null) World.remove(world,b); });
+  score=0; document.getElementById("score").textContent="0";
+  gameOver=false; canDrop=true; nextStage=pickDrop();
+  document.getElementById("ovOver").classList.remove("show");
+  updatePreview();
+}
+
+/* ===== 進化チェーン ===== */
+(function buildChain(){
+  const c=document.getElementById("chain");
+  for(let i=1;i<=MAX_STAGE;i++){
+    const im=document.createElement("img"); im.src=STAGES[i].img; c.appendChild(im);
+    if(i<MAX_STAGE){ const a=document.createElement("span"); a.className="arw"; a.textContent="♡"; c.appendChild(a); }
+  }
+})();
+
+/* ===== 背景ハート生成 ===== */
+(function bgHearts(){
+  const box=document.getElementById("bgHearts");
+  const glyphs=["♥","♡","♥"];
+  for(let i=0;i<9;i++){
+    const s=document.createElement("span");
+    s.textContent=glyphs[i%glyphs.length];
+    s.style.left=(Math.random()*100)+"%";
+    s.style.fontSize=(16+Math.random()*22)+"px";
+    s.style.animationDuration=(9+Math.random()*8)+"s";
+    s.style.animationDelay=(-Math.random()*12)+"s";
+    box.appendChild(s);
+  }
+})();
+
+/* ===== UI ===== */
+document.getElementById("btnRestart").onclick=()=>{ unlockAudio(); restart(); };
+document.getElementById("btnAgain").onclick=()=>{ restart(); };
+document.getElementById("btnSubmit").onclick=submitScore;
+document.getElementById("btnShare").onclick=share;
+document.getElementById("btnRank").onclick=()=>{ document.getElementById("ovRank").classList.add("show"); loadRank("rankList2"); };
+document.getElementById("btnCloseRank").onclick=()=>{ document.getElementById("ovRank").classList.remove("show"); };
+
+document.getElementById("deadline").style.top=(LINE_Y/H*100)+"%";
+updatePreview();
+window.addEventListener("resize",updatePreview);
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+}
+</script>
+</body>
+</html>
