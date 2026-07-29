@@ -1,5 +1,5 @@
 // バージョンを上げるとキャッシュが更新されます（更新時は必ず数字を変える）
-const CACHE = "kiss-otoshi-v6";
+const CACHE = "kiss-otoshi-v8";
 const ASSETS = [
   "./","./index.html","./manifest.json",
   "./kiss1.png","./kiss2.png","./kiss3.png","./kiss4.png","./kiss5.png",
