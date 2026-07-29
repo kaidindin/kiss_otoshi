@@ -98,12 +98,12 @@ body.fever .bg-hearts span{opacity:.42}
 #preview{position:absolute;top:2%;width:11%;transform:translateX(-50%);z-index:4;pointer-events:none;filter:drop-shadow(0 4px 8px rgba(198,75,126,.35));transition:opacity .15s}
 #dropGuide{position:absolute;top:0;bottom:0;width:0;border-left:2px dotted rgba(255,111,165,.55);transform:translateX(-1px);z-index:2;pointer-events:none}
 
-.next{width:100%;max-width:440px;display:flex;align-items:center;gap:10px;padding:5px 20px 2px}
-.next .lbl{font-size:12px;color:var(--rose-deep);font-weight:700}
+.next{width:100%;max-width:440px;display:flex;align-items:center;gap:6px;padding:3px 12px 2px}
+.next .lbl{font-size:12px;color:var(--rose-deep);font-weight:700;white-space:nowrap;flex-shrink:0}
 .next .lbl::before{content:"♡ "}
-.chain{display:flex;gap:2px;align-items:center;flex-wrap:wrap}
-.chain img{width:23px;height:23px;border-radius:50%;box-shadow:0 2px 5px rgba(198,75,126,.2)}
-.chain .arw{color:var(--rose);font-size:10px}
+.chain{display:flex;gap:1px;align-items:center;flex-wrap:nowrap;overflow:hidden;flex:1;min-width:0}
+.chain img{width:16px;height:16px;border-radius:50%;flex-shrink:0;box-shadow:0 1px 3px rgba(198,75,126,.2)}
+.chain .arw{color:var(--rose);font-size:8px;flex-shrink:0}
 
 .controls{width:100%;max-width:440px;display:flex;gap:8px;padding:8px 16px 12px}
 button{font-family:"Zen Maru Gothic",sans-serif;font-weight:700;border:none;border-radius:999px;padding:13px 10px;font-size:14px;cursor:pointer;color:#fff;background:linear-gradient(180deg,#FF8FB8,#FF6FA5);box-shadow:0 6px 16px rgba(255,111,165,.35)}
@@ -179,7 +179,6 @@ button:active{transform:translateY(1px)}
     <h1>KISS落とし<span class="heart">♥</span></h1>
     <div class="sub">ドキドキ♡合体パズル</div>
   </div>
-  <div class="byline">メンズミント公認<br>制作：カイディンディン</div>
 </header>
 
 <div class="scorebar">
@@ -203,7 +202,7 @@ button:active{transform:translateY(1px)}
 </div>
 
 <div class="next">
-  <span class="lbl">恋の進化</span>
+  <span class="lbl">KISSの進化</span>
   <div class="chain" id="chain"></div>
 </div>
 
@@ -241,7 +240,10 @@ button:active{transform:translateY(1px)}
     <input type="text" id="nameInput" maxlength="12" placeholder="なまえ（12文字まで）">
     <div class="row">
       <button id="btnSubmit">ランキング登録</button>
-      <button class="ghost" id="btnShare">Xで共有</button>
+      <button class="ghost" id="btnShare">Xでシェア</button>
+    </div>
+    <div class="row">
+      <button class="ghost" id="btnSaveImg">📷 画像を保存</button>
     </div>
     <div class="row">
       <button class="ghost" id="btnAgain">もう一度、恋する</button>
@@ -454,6 +456,23 @@ function playPop(freq, vol){ if(!actx||seVol<=0) return;
   const o=actx.createOscillator(), g=actx.createGain(); o.type="sine"; o.frequency.value=freq;
   g.gain.value=(vol||.08)*seVol; o.connect(g); g.connect(actx.destination);
   o.start(); g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime+0.18); o.stop(actx.currentTime+0.19); }
+function playGameOver(){ if(!actx||seVol<=0) return;
+  const t0=actx.currentTime;
+  // 切ないマイナーコードの余韻（Am: A3-C4-E4）
+  [220.00,261.63,329.63].forEach(f=>{ const o=actx.createOscillator(),g=actx.createGain(); o.type='sine'; o.frequency.value=f;
+    g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(0.06*seVol,t0+0.25);
+    g.gain.linearRampToValueAtTime(0.05*seVol,t0+1.3); g.gain.exponentialRampToValueAtTime(0.0001,t0+2.4);
+    o.connect(g); g.connect(actx.destination); o.start(t0); o.stop(t0+2.5); });
+  // ゆっくり下降する旋律（A4→G4→E4→C4）
+  const mel=[[440.00,0.0],[392.00,0.36],[329.63,0.72],[261.63,1.12]];
+  mel.forEach(([f,t])=>{ const o=actx.createOscillator(),g=actx.createGain(); o.type='triangle'; o.frequency.value=f;
+    const st=t0+t; g.gain.setValueAtTime(0,st); g.gain.linearRampToValueAtTime(0.18*seVol,st+0.06);
+    g.gain.exponentialRampToValueAtTime(0.0001,st+0.75); o.connect(g); g.connect(actx.destination); o.start(st); o.stop(st+0.78); });
+  // 最後の切ないため息（下降ポルタメント C4→F3）
+  const o2=actx.createOscillator(),g2=actx.createGain(); o2.type='sine'; const st2=t0+1.55;
+  o2.frequency.setValueAtTime(261.63,st2); o2.frequency.exponentialRampToValueAtTime(174.61,st2+0.95);
+  g2.gain.setValueAtTime(0.001,st2); g2.gain.linearRampToValueAtTime(0.16*seVol,st2+0.12);
+  g2.gain.exponentialRampToValueAtTime(0.0001,st2+1.05); o2.connect(g2); g2.connect(actx.destination); o2.start(st2); o2.stop(st2+1.1); }
 const voiceCache={};
 function playVoice(stage){ if(seVol<=0) return;
   try{ let a=voiceCache[stage]; if(!a){ a=new Audio(`voice${stage}.mp3`); a.preload="auto"; voiceCache[stage]=a; }
@@ -492,11 +511,56 @@ async function submitScore(){ const nm=(document.getElementById("nameInput").val
     note.textContent="登録しました♥"; loadRank("rankList"); }catch(e){ note.textContent="登録に失敗しました"; console.warn(e); } }
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 
-/* ===== X共有 ===== */
-function share(){ const text=`メンズミントのKISS落とし♡で ときめき${score}点 出た！\n#KISS落とし #メンズミント`;
+/* ===== 結果カード画像の生成 ===== */
+function resultCanvas(){
+  const Wd=720, Hd=1300, cv=document.createElement("canvas"); cv.width=Wd; cv.height=Hd;
+  const c=cv.getContext("2d");
+  const g=c.createLinearGradient(0,0,0,Hd); g.addColorStop(0,"#FFFFFF"); g.addColorStop(.5,"#FFE3EC"); g.addColorStop(1,"#FFF0F5");
+  c.fillStyle=g; c.fillRect(0,0,Wd,Hd);
+  c.fillStyle="rgba(255,158,196,.22)"; c.font="46px serif";
+  [[60,80],[650,120],[90,1180],[655,1215],[360,64]].forEach(([x,y])=>c.fillText("\u2665",x,y));
+  c.textAlign="center";
+  c.fillStyle="#C64B7E"; c.font='bold 56px "Shippori Mincho", serif';
+  c.fillText("KISS落とし \u2665", Wd/2, 100);
+  const bx=80,by=150,bw=560,bh=840;
+  function rr(x,y,w,h,r){ c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
+  rr(bx,by,bw,bh,28); const bg=c.createLinearGradient(0,by,0,by+bh); bg.addColorStop(0,"#FFFFFF"); bg.addColorStop(.55,"#FFEAF2"); bg.addColorStop(1,"#FFDCEA"); c.fillStyle=bg; c.fill();
+  c.save(); rr(bx,by,bw,bh,28); c.clip();
+  try{ c.drawImage(render.canvas, bx,by,bw,bh); }catch(e){}
+  c.setLineDash([12,9]); c.strokeStyle="rgba(255,111,165,.7)"; c.lineWidth=3;
+  const ly=by+bh*0.15; c.beginPath(); c.moveTo(bx+12,ly); c.lineTo(bx+bw-12,ly); c.stroke(); c.setLineDash([]);
+  c.restore();
+  rr(bx,by,bw,bh,28); c.lineWidth=7; c.strokeStyle="#FF6FA5"; c.stroke();
+  c.fillStyle="#7A2E4A"; c.font="bold 40px 'Zen Maru Gothic', sans-serif"; c.fillText("SCORE", Wd/2, by+bh+82);
+  c.fillStyle="#E9B44C"; c.font='bold 104px "Shippori Mincho", serif'; c.fillText(String(score), Wd/2, by+bh+188);
+  c.fillStyle="#C64B7E"; c.font="bold 34px 'Zen Maru Gothic', sans-serif"; c.fillText("BEST "+best, Wd/2, by+bh+238);
+  c.fillStyle="#C64B7E"; c.font="500 26px 'Zen Maru Gothic', sans-serif";
+  c.fillText("#KISS落とし   kaidindin.github.io/kiss_otoshi", Wd/2, Hd-40);
+  return cv;
+}
+function canvasToFile(cv){ return new Promise(res=>{ try{ cv.toBlob(b=>res(b?new File([b],"kiss-otoshi.png",{type:"image/png"}):null),"image/png"); }catch(e){ res(null); } }); }
+
+/* ===== Xシェア（画像添付）＆ 画像保存 ===== */
+async function shareImage(){
+  const text=`メンズミントのKISS落とし♡で ${score}点！\n#KISS落とし #メンズミント`;
   const url="https://kaidindin.github.io/kiss_otoshi/";
-  if(navigator.share){ navigator.share({text,url}).catch(()=>{}); }
-  else{ window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,"_blank"); } }
+  let file=null; try{ file=await canvasToFile(resultCanvas()); }catch(e){}
+  if(file && navigator.canShare && navigator.canShare({files:[file]})){
+    try{ await navigator.share({files:[file], text, url}); return; }catch(e){ if(e&&e.name==="AbortError") return; }
+  }
+  if(navigator.share){ try{ await navigator.share({text,url}); return; }catch(e){ if(e&&e.name==="AbortError") return; } }
+  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,"_blank");
+}
+async function saveImage(){
+  let file=null; try{ file=await canvasToFile(resultCanvas()); }catch(e){}
+  if(!file) return;
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    try{ await navigator.share({files:[file]}); return; }catch(e){ if(e&&e.name==="AbortError") return; }
+  }
+  const u=URL.createObjectURL(file); const a=document.createElement("a");
+  a.href=u; a.download="kiss-otoshi.png"; document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(u); a.remove(); }, 1200);
+}
 
 /* ===== 画面遷移 ===== */
 function clearBoard(){ Composite.allBodies(world).forEach(b=>{ if(b.stage!=null) World.remove(world,b); }); }
@@ -518,7 +582,7 @@ function endGame(){ gameOver=true; playing=false;
   document.getElementById("nameInput").value=localStorage.getItem("ko_name")||"";
   document.getElementById("ovNote").textContent="";
   document.getElementById("ovOver").classList.add("show");
-  endFever(); updatePreview(); loadRank("rankList"); }
+  endFever(); bgmStop(); playGameOver(); updatePreview(); loadRank("rankList"); }
 
 /* ===== トップへボタン（2度押し確認） ===== */
 let topArm=false, topTimer=null;
@@ -565,13 +629,17 @@ document.getElementById("btnRestart").onclick=restart;
 document.getElementById("btnAgain").onclick=restart;
 document.getElementById("btnToHome").onclick=goHome;
 document.getElementById("btnSubmit").onclick=submitScore;
-document.getElementById("btnShare").onclick=share;
+document.getElementById("btnShare").onclick=shareImage;
+document.getElementById("btnSaveImg").onclick=saveImage;
 
 document.getElementById("deadline").style.top=(LINE_Y/H*100)+"%";
 updatePreview();
 window.addEventListener("resize",updatePreview);
 updateNext();
 loadRank("rankHome"); // トップのランキング初期表示
+
+try{ history.pushState(null,"",location.href);
+  window.addEventListener("popstate",()=>{ history.pushState(null,"",location.href); }); }catch(e){}
 
 if("serviceWorker" in navigator){ window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{})); }
 </script>
