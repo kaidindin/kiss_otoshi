@@ -92,7 +92,9 @@ body.fever .bg-hearts span{opacity:.42}
   background:radial-gradient(120% 60% at 50% 0%, #FFFFFF 0%, #FFEAF2 55%, #FFDCEA 100%);
   border:3px solid var(--rose);border-radius:26px;overflow:hidden;
   box-shadow:0 12px 34px rgba(198,75,126,.22), inset 0 0 40px rgba(255,111,165,.10)}
-.board canvas{position:absolute;inset:0;width:100%!important;height:100%!important}
+.board canvas{position:absolute;inset:0;width:100%!important;height:100%!important;z-index:1}
+.fever-bg{position:absolute;inset:0;z-index:0;background:url(fever.png) center/cover no-repeat;opacity:0;transition:opacity .45s ease;pointer-events:none}
+body.fever .fever-bg{opacity:.17}
 .deadline{position:absolute;left:0;right:0;top:15%;height:0;border-top:2px dashed var(--line);opacity:.6;pointer-events:none;z-index:3}
 .deadline::after{content:"♥ LINE ♥";position:absolute;right:8px;top:-15px;font-size:10px;color:var(--rose-deep);font-weight:700}
 #preview{position:absolute;top:2%;width:11%;transform:translateX(-50%);z-index:4;pointer-events:none;filter:drop-shadow(0 4px 8px rgba(198,75,126,.35));transition:opacity .15s}
@@ -109,6 +111,7 @@ body.fever .bg-hearts span{opacity:.42}
 button{font-family:"Zen Maru Gothic",sans-serif;font-weight:700;border:none;border-radius:999px;padding:13px 10px;font-size:14px;cursor:pointer;color:#fff;background:linear-gradient(180deg,#FF8FB8,#FF6FA5);box-shadow:0 6px 16px rgba(255,111,165,.35)}
 button.ghost{background:#fff;border:1.5px solid var(--rose);color:var(--rose-deep);box-shadow:0 4px 10px rgba(255,111,165,.15)}
 button.warn{background:linear-gradient(180deg,#FFB454,#F2952E)}
+button,.overlay,.card,.controls,.scorebar,.next,header{touch-action:manipulation}
 button:active{transform:translateY(1px)}
 .controls button{flex:1}
 
@@ -193,6 +196,7 @@ button:active{transform:translateY(1px)}
 
 <div class="board-wrap">
   <div class="board" id="board">
+    <div class="fever-bg" id="feverBg"></div>
     <div class="deadline" id="deadline"></div>
     <div id="dropGuide"></div>
     <img id="preview" src="kiss1.png" alt="">
@@ -637,6 +641,12 @@ updatePreview();
 window.addEventListener("resize",updatePreview);
 updateNext();
 loadRank("rankHome"); // トップのランキング初期表示
+
+/* ダブルタップ拡大の抑止 */
+let __lastTouchEnd=0;
+document.addEventListener("touchend",e=>{ const now=Date.now(); if(now-__lastTouchEnd<=350) e.preventDefault(); __lastTouchEnd=now; },{passive:false});
+document.addEventListener("dblclick",e=>e.preventDefault(),{passive:false});
+document.addEventListener("gesturestart",e=>e.preventDefault(),{passive:false});
 
 try{ history.pushState(null,"",location.href);
   window.addEventListener("popstate",()=>{ history.pushState(null,"",location.href); }); }catch(e){}
