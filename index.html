@@ -321,7 +321,8 @@ const DROP_POOL = [1,1,1,2,2,3,3,4,5];
 /* ===== Matter ===== */
 const {Engine, Render, Runner, World, Bodies, Body, Events, Composite} = Matter;
 const W = 400, H = 600, WALL = 60;
-const LINE_Y = H*0.15;
+const LINE_Y = 16;        // 一番小さいKISS約2個分ぶん上へ
+const DROP_Y = 66;        // コマの落下開始位置（LINEと分離）
 const board = document.getElementById("board");
 const engine = Engine.create(); engine.gravity.y = 1;
 const world = engine.world;
@@ -372,7 +373,7 @@ function doDrop(){
   if(!canDrop || gameOver || !playing) return;
   const s = STAGES[curStage]; const minF = s.r/W, maxF = 1 - s.r/W;
   const f = Math.min(maxF, Math.max(minF, previewFrac)); const x = f*W;
-  World.add(world, makeKiss(curStage, x, LINE_Y*0.55));
+  World.add(world, makeKiss(curStage, x, DROP_Y));
   playPop(300+curStage*40, .06); canDrop=false;
   document.getElementById("preview").style.opacity="0";
   document.getElementById("dropGuide").style.opacity="0";
