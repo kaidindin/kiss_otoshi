@@ -80,9 +80,9 @@ h1 .heart{color:var(--rose)}
 .feverbar{flex:1;height:13px;border-radius:999px;background:#FFE6EF;border:1.5px solid #FFC9DC;overflow:hidden}
 .feverfill{height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,#FF9EC4,#FF6FA5,#E9B44C);transition:width .18s ease-out;box-shadow:0 0 8px rgba(255,111,165,.5)}
 .combo{position:absolute;top:8px;left:12px;z-index:6;font-family:"Shippori Mincho",serif;font-weight:800;font-size:17px;color:var(--rose-deep);opacity:0;transition:opacity .2s;text-shadow:0 1px 3px #fff}
-.fever-banner{position:absolute;top:40%;left:50%;transform:translate(-50%,-50%) scale(.6);z-index:7;font-family:"Shippori Mincho",serif;font-weight:800;font-size:24px;color:#fff;white-space:nowrap;background:linear-gradient(90deg,#FF6FA5,#E9B44C);padding:9px 20px;border-radius:999px;box-shadow:0 8px 24px rgba(198,75,126,.5);opacity:0;pointer-events:none}
+.fever-banner{position:absolute;top:7%;left:50%;transform:translate(-50%,0) scale(.6);z-index:7;max-width:92%;text-align:center;text-shadow:0 1px 2px rgba(198,75,126,.4);font-family:"Shippori Mincho",serif;font-weight:800;font-size:17px;color:#fff;white-space:nowrap;background:linear-gradient(90deg,#FF6FA5,#E9B44C);padding:8px 16px;border-radius:999px;box-shadow:0 8px 24px rgba(198,75,126,.5);opacity:0;pointer-events:none}
 .fever-banner.show{animation:feverPop 8s ease-out forwards}
-@keyframes feverPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}6%{opacity:1;transform:translate(-50%,-50%) scale(1.12)}12%{transform:translate(-50%,-50%) scale(1)}86%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(.9)}}
+@keyframes feverPop{0%{opacity:0;transform:translate(-50%,0) scale(.6)}6%{opacity:1;transform:translate(-50%,0) scale(1.12)}12%{transform:translate(-50%,0) scale(1)}86%{opacity:1;transform:translate(-50%,0) scale(1)}100%{opacity:0;transform:translate(-50%,0) scale(.9)}}
 body.fever .board{box-shadow:0 0 0 3px #E9B44C, 0 14px 44px rgba(233,180,76,.5);animation:feverGlow .5s ease-in-out infinite alternate}
 @keyframes feverGlow{from{filter:saturate(1) brightness(1)}to{filter:saturate(1.35) brightness(1.06)}}
 body.fever .bg-hearts span{opacity:.42}
