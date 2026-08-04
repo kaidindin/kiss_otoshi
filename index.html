@@ -161,6 +161,9 @@ button:active{transform:translateY(1px)}
 .slider::before{content:"";position:absolute;width:22px;height:22px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
 .switch input:checked + .slider{background:var(--rose)}
 .switch input:checked + .slider::before{transform:translateX(24px)}
+.bgmsel{display:flex;gap:5px;flex-wrap:wrap}
+.bgmbtn{padding:7px 12px;font-size:12px;font-weight:700;border-radius:999px;border:1.5px solid #FFC9DC;background:#fff;color:var(--rose-deep);cursor:pointer}
+.bgmbtn.active{background:var(--rose);color:#fff;border-color:var(--rose)}
 
 /* 遊び方 */
 .help-body{text-align:left;font-size:13.5px;line-height:1.7;color:var(--ink)}
@@ -266,6 +269,14 @@ button:active{transform:translateY(1px)}
       <label class="switch"><input type="checkbox" id="bgmToggle"><span class="slider"></span></label></div>
     <div class="setrow"><span>BGMの音量</span><input type="range" id="bgmVol" min="0" max="100"></div>
     <div class="setrow"><span>効果音・ボイス</span><input type="range" id="seVol" min="0" max="100"></div>
+    <div class="setrow" style="flex-wrap:wrap"><span>プレイ中のBGM</span>
+      <div class="bgmsel" id="bgmSel">
+        <button class="bgmbtn" data-m="random">ランダム</button>
+        <button class="bgmbtn" data-m="1">①</button>
+        <button class="bgmbtn" data-m="2">②</button>
+        <button class="bgmbtn" data-m="3">③</button>
+      </div>
+    </div>
     <div class="row" style="margin-top:14px"><button id="btnCloseSettings">とじる</button></div>
   </div></div>
 </div>
@@ -417,10 +428,10 @@ function onMerge(stage){
 function startFever(){ fever=true; feverMult=2; feverEnd=performance.now()+FEVER_MS;
   document.body.classList.add("fever");
   const bn=document.getElementById("feverBanner"); bn.classList.remove("show"); void bn.offsetWidth; bn.classList.add("show");
-  bgmFever(true); playPop(1046,.2); }
+  setFeverRate(true); playPop(1046,.2); }
 function endFever(){ if(!fever) return; fever=false; feverMult=1; gauge=0; combo=0;
   document.body.classList.remove("fever"); document.getElementById("feverBanner").classList.remove("show");
-  updateGaugeUI(); updateComboUI(); bgmFever(false); }
+  updateGaugeUI(); updateComboUI(); setFeverRate(false); }
 function feverReset(){ endFever(); gauge=0; combo=0; if(comboTimer)clearTimeout(comboTimer); updateGaugeUI(); updateComboUI(); }
 
 /* ===== ゲームオーバー判定 ===== */
@@ -483,23 +494,31 @@ function playVoice(stage){ if(seVol<=0) return;
   try{ let a=voiceCache[stage]; if(!a){ a=new Audio(`voice${stage}.mp3`); a.preload="auto"; voiceCache[stage]=a; }
     a.volume=Math.min(1,seVol); a.currentTime=0; a.play().catch(()=>{}); }catch(e){} }
 
-/* ===== BGM（Web Audio 合成ループ） ===== */
-const MEL=[523.25,659.25,783.99,659.25,587.33,698.46,880.00,698.46]; // C E G E D F A F
-const BASS=[130.81,110.00,87.31,98.00]; // C3 A2 F2 G2
-const bgm={timer:null,master:null,step:0,playing:false,period:300};
-function bgmNote(freq,dur,type,v){ const o=actx.createOscillator(),g=actx.createGain(); o.type=type; o.frequency.value=freq;
-  const t=actx.currentTime; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(v,t+0.02);
-  g.gain.exponentialRampToValueAtTime(0.0001,t+dur); o.connect(g); g.connect(bgm.master); o.start(t); o.stop(t+dur+0.05); }
-function bgmTick(){ const s=bgm.step; bgmNote(MEL[s%MEL.length],0.34,"triangle",0.5);
-  if(s%2===0) bgmNote(BASS[Math.floor(s/2)%BASS.length],0.5,"sine",0.55); bgm.step++; }
-function bgmSchedule(){ if(bgm.timer) clearInterval(bgm.timer); bgm.timer=setInterval(bgmTick, bgm.period); }
-function bgmStart(){ if(!actx||bgm.playing||!bgmOn) return;
-  bgm.master=actx.createGain(); bgm.master.gain.value=bgmVol*0.12; bgm.master.connect(actx.destination);
-  bgm.step=0; bgm.playing=true; bgmSchedule(); }
-function bgmFever(on){ if(!bgm.playing) return; bgm.period = on?165:300; bgmSchedule(); }
-function bgmStop(){ if(bgm.timer) clearInterval(bgm.timer); bgm.timer=null; bgm.playing=false;
-  if(bgm.master){ try{bgm.master.disconnect();}catch(e){} bgm.master=null; } }
-function bgmApplyVol(){ if(bgm.master) bgm.master.gain.value=bgmVol*0.12; }
+/* ===== BGM（音源ファイル） ===== */
+const BGM_HOME_SRC="bgm_home.mp3";
+const BGM_PLAY_SRCS=["bgm1.mp3","bgm2.mp3","bgm3.mp3"];
+let bgmMode = localStorage.getItem("ko_bgmmode")||"random"; // "random" | "1" | "2" | "3"
+let homeAudio=null, playAudio=null, curPlayIdx=-1, bgmCtx="home", bgmPrimed=false;
+
+function applyBgmVolume(){ if(homeAudio) homeAudio.volume=bgmVol; if(playAudio) playAudio.volume=bgmVol; }
+function stopHomeBGM(){ if(homeAudio) homeAudio.pause(); }
+function stopPlayBGM(){ if(playAudio){ playAudio.pause(); playAudio.onended=null; } }
+function stopAllBGM(){ stopHomeBGM(); stopPlayBGM(); }
+function homeBGM(){ bgmCtx="home"; stopPlayBGM(); if(!bgmOn) return;
+  if(!homeAudio){ homeAudio=new Audio(BGM_HOME_SRC); homeAudio.loop=true; homeAudio.preload="auto"; }
+  homeAudio.volume=bgmVol; homeAudio.play().catch(()=>{}); }
+function pickPlayIdx(){ if(bgmMode!=="random") return Math.max(0,Math.min(2,parseInt(bgmMode,10)-1));
+  let i=Math.floor(Math.random()*BGM_PLAY_SRCS.length); if(i===curPlayIdx) i=(i+1)%BGM_PLAY_SRCS.length; return i; }
+function playNextBGM(){ if(!bgmOn) return; const idx=pickPlayIdx(); curPlayIdx=idx; stopPlayBGM();
+  playAudio=new Audio(BGM_PLAY_SRCS[idx]); playAudio.preload="auto"; playAudio.volume=bgmVol;
+  playAudio.playbackRate=fever?1.10:1.0; playAudio.loop=(bgmMode!=="random");
+  if(bgmMode==="random") playAudio.onended=()=>{ playNextBGM(); };
+  playAudio.play().catch(()=>{}); }
+function startPlayBGM(){ bgmCtx="play"; stopHomeBGM(); if(bgmOn) playNextBGM(); }
+function setFeverRate(on){ if(playAudio) playAudio.playbackRate = on?1.10:1.0; }
+function primeBGM(e){ if(bgmPrimed) return; bgmPrimed=true; if(!bgmOn) return;
+  if(bgmCtx==="home" && !(e&&e.target&&e.target.closest&&e.target.closest("#btnStart"))) homeBGM(); }
+document.addEventListener("pointerdown", primeBGM);
 
 /* ===== ランキング ===== */
 async function loadRank(targetId){ const ol=document.getElementById(targetId); if(!ol) return;
@@ -573,11 +592,11 @@ function startGame(){ unlockAudio(); clearBoard(); score=0; document.getElementB
   gameOver=false; canDrop=true; playing=true; curStage=pickDrop(); nextStage=pickDrop(); updateNext();
   document.getElementById("home").classList.remove("show");
   document.getElementById("ovOver").classList.remove("show");
-  resetTopBtn(); feverReset(); bgmStart(); updatePreview(); }
+  resetTopBtn(); feverReset(); startPlayBGM(); updatePreview(); }
 function restart(){ unlockAudio(); clearBoard(); score=0; document.getElementById("score").textContent="0";
   gameOver=false; canDrop=true; playing=true; curStage=pickDrop(); nextStage=pickDrop(); updateNext();
-  document.getElementById("ovOver").classList.remove("show"); feverReset(); bgmStart(); updatePreview(); }
-function goHome(){ playing=false; gameOver=false; bgmStop(); clearBoard();
+  document.getElementById("ovOver").classList.remove("show"); feverReset(); startPlayBGM(); updatePreview(); }
+function goHome(){ playing=false; gameOver=false; homeBGM(); clearBoard();
   score=0; document.getElementById("score").textContent="0";
   document.getElementById("ovOver").classList.remove("show");
   document.getElementById("home").classList.add("show");
@@ -587,7 +606,7 @@ function endGame(){ gameOver=true; playing=false;
   document.getElementById("nameInput").value=localStorage.getItem("ko_name")||"";
   document.getElementById("ovNote").textContent="";
   document.getElementById("ovOver").classList.add("show");
-  endFever(); bgmStop(); playGameOver(); updatePreview(); loadRank("rankList"); }
+  endFever(); stopPlayBGM(); playGameOver(); updatePreview(); loadRank("rankList"); }
 
 /* ===== トップへボタン（2度押し確認） ===== */
 let topArm=false, topTimer=null;
@@ -615,14 +634,18 @@ function openSettings(){ unlockAudio();
   document.getElementById("bgmToggle").checked=bgmOn;
   document.getElementById("bgmVol").value=Math.round(bgmVol*100);
   document.getElementById("seVol").value=Math.round(seVol*100);
+  refreshBgmSel();
   document.getElementById("ovSettings").classList.add("show"); }
 document.getElementById("btnSettings").onclick=openSettings;
 document.getElementById("btnSettingsHome").onclick=openSettings;
 document.getElementById("btnCloseSettings").onclick=()=>document.getElementById("ovSettings").classList.remove("show");
 document.getElementById("bgmToggle").onchange=e=>{ bgmOn=e.target.checked; localStorage.setItem("ko_bgm",bgmOn?"1":"0");
-  if(bgmOn){ if(playing) bgmStart(); } else bgmStop(); };
-document.getElementById("bgmVol").oninput=e=>{ bgmVol=e.target.value/100; localStorage.setItem("ko_bgmvol",bgmVol); bgmApplyVol(); };
+  if(bgmOn){ if(playing) startPlayBGM(); else homeBGM(); } else stopAllBGM(); };
+document.getElementById("bgmVol").oninput=e=>{ bgmVol=e.target.value/100; localStorage.setItem("ko_bgmvol",bgmVol); applyBgmVolume(); };
 document.getElementById("seVol").oninput=e=>{ seVol=e.target.value/100; localStorage.setItem("ko_sevol",seVol); playPop(660,.08); };
+function refreshBgmSel(){ document.querySelectorAll("#bgmSel .bgmbtn").forEach(b=>b.classList.toggle("active", b.dataset.m===bgmMode)); }
+document.querySelectorAll("#bgmSel .bgmbtn").forEach(b=>{ b.onclick=()=>{ bgmMode=b.dataset.m; localStorage.setItem("ko_bgmmode",bgmMode); refreshBgmSel(); if(bgmCtx==="play" && bgmOn) playNextBGM(); }; });
+refreshBgmSel();
 
 /* ===== 遊び方 ===== */
 document.getElementById("btnHelp").onclick=()=>document.getElementById("ovHelp").classList.add("show");
