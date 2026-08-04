@@ -152,7 +152,7 @@ button:active{transform:translateY(1px)}
 
 /* 設定 */
 .setrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 6px;border-bottom:1px dashed #FFD3E0;font-size:14px;font-weight:700;color:var(--plum)}
-.setrow input[type=range]{-webkit-appearance:none;appearance:none;height:6px;border-radius:6px;background:#FFD3E0;flex:1;max-width:180px}
+.setrow input[type=range]{-webkit-appearance:none;appearance:none;height:6px;border-radius:6px;background:#FFD3E0;flex:1;max-width:180px;touch-action:none}
 .setrow input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--rose);box-shadow:0 2px 5px rgba(198,75,126,.4)}
 .setrow input[type=range]::-moz-range-thumb{width:20px;height:20px;border:none;border-radius:50%;background:var(--rose)}
 .switch{position:relative;width:52px;height:28px}
@@ -499,23 +499,25 @@ const BGM_HOME_SRC="bgm_home.mp3";
 const BGM_PLAY_SRCS=["bgm1.mp3","bgm2.mp3","bgm3.mp3"];
 let bgmMode = localStorage.getItem("ko_bgmmode")||"random"; // "random" | "1" | "2" | "3"
 let homeAudio=null, playAudio=null, curPlayIdx=-1, bgmCtx="home", bgmPrimed=false;
+let bgmGain=null; const bgmSrcSet=new WeakSet();
+function ensureBgmGain(){ if(!actx) unlockAudio(); if(actx && !bgmGain){ bgmGain=actx.createGain(); bgmGain.gain.value=bgmVol; bgmGain.connect(actx.destination); } return !!bgmGain; }
+function routeBGM(a){ if(ensureBgmGain() && !bgmSrcSet.has(a)){ try{ const src=actx.createMediaElementSource(a); src.connect(bgmGain); bgmSrcSet.add(a); }catch(e){} } a.volume = bgmGain ? 1 : bgmVol; }
 
-function applyBgmVolume(){ if(homeAudio) homeAudio.volume=bgmVol; if(playAudio) playAudio.volume=bgmVol; }
+function applyBgmVolume(){ if(bgmGain){ bgmGain.gain.value=bgmVol; } else { if(homeAudio) homeAudio.volume=bgmVol; if(playAudio) playAudio.volume=bgmVol; } }
 function stopHomeBGM(){ if(homeAudio) homeAudio.pause(); }
 function stopPlayBGM(){ if(playAudio){ playAudio.pause(); playAudio.onended=null; } }
 function stopAllBGM(){ stopHomeBGM(); stopPlayBGM(); }
 function homeBGM(){ bgmCtx="home"; stopPlayBGM(); if(!bgmOn) return;
   if(!homeAudio){ homeAudio=new Audio(BGM_HOME_SRC); homeAudio.loop=true; homeAudio.preload="auto"; }
-  homeAudio.volume=bgmVol; homeAudio.play().catch(()=>{}); }
+  routeBGM(homeAudio); homeAudio.play().catch(()=>{}); }
 function pickPlayIdx(){ if(bgmMode!=="random") return Math.max(0,Math.min(2,parseInt(bgmMode,10)-1));
   let i=Math.floor(Math.random()*BGM_PLAY_SRCS.length); if(i===curPlayIdx) i=(i+1)%BGM_PLAY_SRCS.length; return i; }
 function playNextBGM(){ if(!bgmOn) return; const idx=pickPlayIdx(); curPlayIdx=idx; stopPlayBGM();
-  playAudio=new Audio(BGM_PLAY_SRCS[idx]); playAudio.preload="auto"; playAudio.volume=bgmVol;
-  playAudio.playbackRate=fever?1.10:1.0; playAudio.loop=(bgmMode!=="random");
+  playAudio=new Audio(BGM_PLAY_SRCS[idx]); playAudio.preload="auto"; playAudio.loop=(bgmMode!=="random"); routeBGM(playAudio);
   if(bgmMode==="random") playAudio.onended=()=>{ playNextBGM(); };
   playAudio.play().catch(()=>{}); }
 function startPlayBGM(){ bgmCtx="play"; stopHomeBGM(); if(bgmOn) playNextBGM(); }
-function setFeverRate(on){ if(playAudio) playAudio.playbackRate = on?1.10:1.0; }
+function setFeverRate(){ /* フィーバー中のテンポ変化は無し */ }
 function primeBGM(e){ if(bgmPrimed) return; bgmPrimed=true; if(!bgmOn) return;
   if(bgmCtx==="home" && !(e&&e.target&&e.target.closest&&e.target.closest("#btnStart"))) homeBGM(); }
 document.addEventListener("pointerdown", primeBGM);
